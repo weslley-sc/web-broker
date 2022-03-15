@@ -320,10 +320,8 @@ export default {
     },
     async valorTotal() {
       let valueTrade = this.volume * this.price;
-      return (this.total = valueTrade.toString("pt-br", {
-        style: " currency",
-        currency: "BRL",
-      }));
+      this.total = valueTrade;
+      return this.total;
     },
   },
   directives: { money: VMoney },

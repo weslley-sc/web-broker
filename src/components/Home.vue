@@ -201,7 +201,7 @@ export default {
           let response = await axios.get(`http://localhost:8084/stock`, {
             headers: { Authorization: "Bearer " + accessToken },
           });
-          //this.caffeineLevel = response.data;
+
           console.log(response);
 
           for (var chave in response.data) {
@@ -300,7 +300,7 @@ export default {
         for (let key in balance) {
           if (balance[key].idUser.username === this.claims.email) {
             console.log("É igual abestadooo");
-            return (this.user.push = {
+            return this.user.push({
               username: balance[key].idUser.username,
               id: balance[key].idUser.id,
               idStock: balance[key].idStock,
