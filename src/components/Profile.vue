@@ -8,6 +8,7 @@
           class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
         >
           <table class="min-w-full divide-y divide-gray-200 md:grid-col-12">
+            <caption></caption>
             <thead class="bg-gray-50">
               <tr>
                 <th
