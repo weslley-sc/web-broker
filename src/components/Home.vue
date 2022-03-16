@@ -37,9 +37,9 @@
         class="bg-gray-100 divide-y flex flex-col items-center overflow-y-scroll w-full"
         style="height: 50vh"
       >
-        <tr class="flex w-full text-center" v-for="(acao, i) in acoes" :key="i">
+        <tr class="flex w-full text-center" v-for="acao in acoes" :key="acao">
           <td class="p-4 w-1/4 whitespace-nowrap">
-            <button v-on:click="toggleModal(acao)" v-bind="stockSelecionado">
+            <button v-on:click="toggleModal(acao)">
               <span
                 class="bg-gray-100 text-gray-500 text-sm font-medium mr-2 px-2.5 py-0.5 hover:bg-yellow-300 hover:text-black"
                 >{{ acao.stockName }}</span
@@ -144,14 +144,15 @@
             >
               <button
                 class="py-3 px-8 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-500 hover:bg-gray-300 focus:outline-none"
-                @click="comprar()"
+                @click="comprar(showModal)"
+                v-on:click="toggleModal1(showModal)"
               >
                 Salvar Ordem
               </button>
               <button
                 class="py-3 px-8 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-500 hover:bg-gray-300 focus:outline-none"
                 type="button"
-                v-on:click="toggleModal1()"
+                v-on:click="toggleModal1(showModal)"
               >
                 Close
               </button>
@@ -173,26 +174,30 @@ export default {
   name: "Testes",
   data: () => ({
     acoes: [],
-    comprar: [],
+
     showModal: false,
+
     stockName: "",
+
     stockSymbol: "",
-    idStock: null,
+
+    idStock: 0,
+    volume: 0,
+
     compraAcao: null,
-    stockSelecionado: [],
-    name: "",
-    user: [],
-    type: null,
+
+    type: 1,
   }),
   created() {
-    this.buscar();
+    this.buscarAcoes();
   },
   before() {
-    this.stockBalance();
     this.comprar();
   },
+
   methods: {
-    async buscar() {
+    async buscarAcoes() {
+      console.log("pagando as Stocks !!!");
       if (this.$root.authenticated) {
         this.claims = await this.$auth.getUser();
         let accessToken = this.$auth.getAccessToken();
@@ -223,139 +228,97 @@ export default {
                     }),
             });
           }
+          console.log("peguei as stocks ./");
         } catch (error) {
           console.log("Ta errado isso aí");
           this.caffeineLevel = `${error}`;
         }
       }
     },
-    async selectStock() {
-      if (this.$root.authenticated) {
-        this.claims = await this.$auth.getUser();
-        let accessToken = this.$auth.getAccessToken();
-        try {
-          let response = await axios.get(
-            `http://localhost:8084/stock/stockname/${this.name}`,
 
-            {
-              headers: { Authorization: "Bearer " + accessToken },
-            }
-          );
-          this.stockSelecionado = response.data;
-          console.log("olha pra baixo");
-          console.log(this.stockSelecionado);
-        } catch (error) {
-          this.stockSelecionado = `${error}`;
-        }
-      }
-    },
     async toggleModal1() {
       this.showModal = !this.showModal;
     },
     async toggleModal(acao) {
       this.showModal = !this.showModal;
       this.compraAcao = acao;
-      this.stockName = acao.stockName;
-      this.stockSymbol = acao.stockSymbol;
-      this.idStock = acao.id;
+      this.stockName = this.compraAcao.stockName;
+      this.stockSymbol = this.compraAcao.stockSymbol;
+      this.idStock = this.compraAcao.id;
     },
-  },
 
-  async getUser() {
-    console.log("Quase pegando usuario");
-    if (this.$root.authenticated) {
-      this.claims = await this.$auth.getUser();
-      let accessToken = this.$auth.getAccessToken();
-      try {
-        await axios
-          .get(`http://localhost:8083/user/${this.claims.email}`, {
-            headers: {
-              Authorization: "Bearer " + accessToken,
-            },
-          })
-          .then((res) => {
-            this.user = res.data;
+    async comprar(acao) {
+      if (this.$root.authenticated) {
+        let accessToken = this.$auth.getAccessToken();
+        this.claims = await this.$auth.getUser();
+        try {
+          let response = await axios.get(`http://localhost:8084/stock`, {
+            headers: { Authorization: "Bearer " + accessToken },
           });
+          console.log(response);
 
-        console.log(this.user);
-
-        await console.log("o id do usuario é: " + this.user);
-      } catch (error) {
-        this.user = `${error}`;
-      }
-    }
-  },
-  async stockBalance() {
-    console.log("to aquiiiiiiiiii");
-    if (this.$root.authenticated) {
-      this.claims = await this.$auth.getUser();
-      let accessToken = this.$auth.getAccessToken();
-      try {
-        let response = await axios.get(`http://localhost:8083/balances`, {
-          headers: { Authorization: "Bearer " + accessToken },
-        });
-        console.log(response.data);
-        let balance = response.data;
-        console.log(this.balance);
-        for (let key in balance) {
-          if (balance[key].idUser.username === this.claims.email) {
-            console.log("É igual abestadooo");
-            return this.user.push({
-              username: balance[key].idUser.username,
-              id: balance[key].idUser.id,
-              idStock: balance[key].idStock,
-              stockName: balance[key].stockName,
-              stockSymbol: balance[key].stockSymbol,
-              volume: balance[key].volume,
+          for (var chave in response.data) {
+            this.acoes.push({
+              id: response.data[chave].id,
+              stockSymbol: response.data[chave].stockSymbol,
+              stockName: response.data[chave].stockName,
             });
           }
-        }
-      } catch (error) {
-        this.walletUser = `${error}`;
-      }
-    }
-  },
+          this.stockName2 = this.acaoCompra.stockName;
 
-  /* ------------------- */
-  async comprar() {
-    if (this.$root.authenticated) {
-      this.claims = await this.$auth.getUser();
-      let accessToken = this.$auth.getAccessToken();
-      try {
-        await axios
-          .post(
-            `http://localhost:8083/order/compra`,
+          console.log("Stock Modal");
+          console.log(this.stockName2);
+        } catch (error) {
+          console.log("Ta errado isso aí");
+          this.caffeineLevel = `${error}`;
+        }
+
+        try {
+          let response = await axios.get(
+            `http://localhost:8083/user/${this.claims.email}`,
             {
               headers: { Authorization: "Bearer " + accessToken },
-            },
+            }
+          );
+
+          this.user = response.data.id;
+          console.log("Aqui é id do usuario: " + this.user);
+          console.log(response);
+        } catch (error) {
+          this.erro = `${error}`;
+        }
+
+        try {
+          await axios.post(
+            `http://localhost:8083/order/compra`,
             {
               idUser: {
-                id: this.user.id,
+                id: this.user,
               },
               idStock: this.idStock,
               stockSymbol: this.stockSymbol,
               stockName: this.stockName,
               volume: this.volume,
+              volumeRemaining: 0,
               price: this.price,
               type: this.type,
-              volumeRemaining: 0,
               status: 1,
+            },
+            {
+              headers: { Authorization: "Bearer " + accessToken },
             }
-          )
-          .then(() => {
-            window.alert("Cadastrado com sucesso");
-            console.log("criou");
-            this.sucesso = true;
-            this.name = "---- Selecione uma stock ----";
-            this.price = "";
-            this.volume = "";
-            this.type = "---- Selecione o tipo ----";
-          });
-        console.log("esse é o id do stock: " + this.user.id);
-      } catch (error) {
-        console.log(error);
+          );
+          console.log("Aqui é id do stock: " + this.stockName);
+          console.log(this.stockName);
+        } catch (error) {
+          console.log(error);
+        }
+        this.compraAcao = acao;
+        this.stockName = this.compraAcao.stockName;
+        this.stockSymbol = this.compraAcao.stockSymbol;
+        this.idStock = this.compraAcao.id;
       }
-    }
+    },
   },
 };
 </script>

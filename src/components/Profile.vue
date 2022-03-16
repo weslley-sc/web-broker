@@ -182,6 +182,7 @@ export default {
         });
       }
     },
+
     async stockBalance() {
       console.log("to aquiiiiiiiiii");
       if (this.$root.authenticated) {

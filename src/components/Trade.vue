@@ -15,6 +15,7 @@
           <div class="mt-5 md:mt-0 md:col-span-3">
             <div class="bg-gray-50 px-4 py-5 sm:p-6">
               <div class="grid grid-cols-6 gap-6">
+                { this.usuario }
                 <div class="col-span-6">
                   <label class="block text-sm font-medium text-gray-700"
                     >Stock Name:
@@ -27,7 +28,11 @@
                     v-model="name"
                   >
                     <option selected>---- Select a stock ----</option>
-                    <option v-for="stock in stocksName" :key="stock">
+                    <option
+                      v-for="stock in stocksName"
+                      :key="stock"
+                      @click="setup(stock)"
+                    >
                       {{ stock.stockName }}
                     </option>
                   </select>
@@ -179,16 +184,19 @@ export default {
       sucesso: false,
       erro: false,
       name: "",
+      stockSymbol: "",
+      stockName: "",
+      idStock: 0,
       name1: "",
       price: "",
       sell: "",
       volume: "",
       volume2: "",
+      acaoCompra: null,
       total: "",
       type: [],
       teste: {},
-      id: "",
-      usuario: {},
+      id: 0,
       money: {
         decimal: ",",
         thousands: ".",
@@ -198,41 +206,106 @@ export default {
       },
     };
   },
-  async created() {
+  created() {
     this.setup();
-    this.getMoeda();
-    this.criarOrdem();
-    this.valorTotal();
   },
+
+  before() {
+    this.valorTotal();
+    this.criarOrdem();
+  },
+
   methods: {
-    async setup() {
+    async setup(stock) {
       if (this.$root.authenticated) {
         this.claims = await this.$auth.getUser();
         let accessToken = this.$auth.getAccessToken();
+        console.log(`Authorization: Bearer ${accessToken}`);
         try {
-          let response = await axios.get("http://localhost:8084/stock", {
+          let response = await axios.get(`http://localhost:8084/stock`, {
             headers: { Authorization: "Bearer " + accessToken },
           });
-          this.stocksName = response.data;
-          console.log("teste");
+
+          console.log(response);
+
+          for (var chave in response.data) {
+            this.stocksName.push({
+              id: response.data[chave].id,
+              stockSymbol: response.data[chave].stockSymbol,
+              stockName: response.data[chave].stockName,
+              askMin:
+                response.data[chave].ask_min == null
+                  ? 0
+                  : response.data[chave].ask_min.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    }),
+              askMax:
+                response.data[chave].ask_min == null
+                  ? 0
+                  : response.data[chave].ask_min.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    }),
+            });
+          }
         } catch (error) {
-          this.stocksName = `${error}`;
+          console.log("Erro na Stock pae");
         }
+        this.acaoCompra = stock;
+        this.idStock = this.acaoCompra.id;
+        this.stockName = this.acaoCompra.stockName;
+        this.stockSymbol = this.acaoCompra.stockSymbol;
+      }
+    },
+    async criarOrdem() {
+      if (this.$root.authenticated) {
+        let accessToken = this.$auth.getAccessToken();
+        this.claims = await this.$auth.getUser();
+
         try {
           let response = await axios.get(
-            `http://localhost:8083/user/${this.claims.name}`,
+            `http://localhost:8083/user/${this.claims.email}`,
             {
               headers: { Authorization: "Bearer " + accessToken },
             }
           );
-          this.usuario.push({
-            id: response.data[0].id,
-            name: response.data.username,
-          });
-          console.log("olha pra baixo");
-          console.log(this.usuario.id);
+
+          this.usuario = response.data.id;
+          console.log("Aqui é id do usuario: " + this.usuario);
         } catch (error) {
-          this.users = `${error}`;
+          this.erro = `${error}`;
+        }
+        try {
+          await axios
+            .post(
+              `http://localhost:8083/order/compra`,
+              {
+                idUser: {
+                  id: this.usuario,
+                },
+                idStock: this.idStock,
+                stockSymbol: this.stockSymbol,
+                stockName: this.stockName,
+                volume: this.volume,
+                volumeRemaining: 0,
+                price: this.price,
+                type: this.type,
+                status: 1,
+              },
+              {
+                headers: { Authorization: "Bearer " + accessToken },
+              }
+            )
+            .then(() => {
+              window.alert("Cadastrado com sucesso");
+              console.log("criou");
+              this.sucesso = true;
+              this.name = "---- Selecione uma stock ----";
+              this.price = "";
+              this.volume = "";
+              this.type = "---- Selecione o tipo ----";
+            });
+        } catch (error) {
+          console.log(error);
         }
       }
     },
@@ -264,57 +337,6 @@ export default {
           console.log(this.teste.id);
         } catch (error) {
           this.walletUser = `${error}`;
-        }
-      }
-    },
-    async criarOrdem() {
-      if (this.$root.authenticated) {
-        this.claims = await this.$auth.getUser();
-        let accessToken = this.$auth.getAccessToken();
-        try {
-          await axios
-            .post(
-              `http://localhost:8083/order/compra`,
-              {
-                idUser: {
-                  id: this.usuario.id,
-                },
-                idStock: this.teste.idstock,
-                stockSymbol: this.teste.stockSymbol,
-                stockName: this.name,
-                volume: this.volume,
-                price: this.price,
-                type: this.type,
-                volumeRemaining: this.volume,
-                status: 1,
-              },
-              {
-                headers: { Authorization: "Bearer " + accessToken },
-              }
-            )
-            .then(() => {
-              window.alert("Cadastrado com sucesso");
-              console.log("criou");
-              this.sucesso = true;
-              this.name = "---- Selecione uma stock ----";
-              this.price = "";
-              this.volume = "";
-              this.type = "---- Selecione o tipo ----";
-            });
-          console.log(
-            "id: " +
-              this.teste[0].id +
-              " Symbol: " +
-              this.teste[0].stock_symbol +
-              " Nome: " +
-              this.name +
-              " Volume: " +
-              this.volume +
-              " Preço: " +
-              this.price
-          );
-        } catch (error) {
-          console.log(error);
         }
       }
     },
