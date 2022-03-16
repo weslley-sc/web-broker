@@ -7,6 +7,7 @@
     <table
       class="text-center justify-center min-w-full divide-y shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
     >
+      <caption></caption>
       <thead class="bg-gray-300 flex w-full">
         <tr class="flex w-full text-center">
           <th
@@ -308,7 +309,9 @@ export default {
               headers: { Authorization: "Bearer " + accessToken },
             }
           );
-          console.log("Aqui é id do stock: " + this.stockName);
+          console.log("Aqui é id do stock: " + this.idStock);
+          console.log("Aqui é stockName : " + this.stockName);
+          console.log("Aqui é stockSymbol: " + this.stockSymbol);
           console.log(this.stockName);
         } catch (error) {
           console.log(error);
