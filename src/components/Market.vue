@@ -7,6 +7,7 @@
           class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
         >
           <table class="min-w-full divide-y divide-gray-200 md:grid-col-12">
+            <caption></caption>
             <div class="col-span-6">
               <label
                 for="country"

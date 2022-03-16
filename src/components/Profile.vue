@@ -75,6 +75,7 @@
           </table>
           <!-- table 2 -->
           <table class="min-w-full divide-y divide-black">
+            <caption></caption>
             <thead class="bg-teal-dark">
               <th
                 scope="col"
