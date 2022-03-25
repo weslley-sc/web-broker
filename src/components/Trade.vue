@@ -15,7 +15,6 @@
           <div class="mt-5 md:mt-0 md:col-span-3">
             <div class="bg-gray-50 px-4 py-5 sm:p-6">
               <div class="grid grid-cols-6 gap-6">
-                { this.usuario }
                 <div class="col-span-6">
                   <label class="block text-sm font-medium text-gray-700"
                     >Stock Name:
@@ -263,7 +262,7 @@ export default {
 
         try {
           let response = await axios.get(
-            `http://localhost:8083/user/${this.claims.email}`,
+            `http://localhost:8083/api/users/username/${this.claims.email}`,
             {
               headers: { Authorization: "Bearer " + accessToken },
             }
@@ -277,16 +276,14 @@ export default {
         try {
           await axios
             .post(
-              `http://localhost:8083/order/compra`,
+              `http://localhost:8083/order/novaOrdem`,
               {
-                idUser: {
-                  id: this.usuario,
-                },
+                idUser: this.usuario,
                 idStock: this.idStock,
                 stockSymbol: this.stockSymbol,
                 stockName: this.stockName,
                 volume: this.volume,
-                volumeRemaining: 0,
+                volumeRemaining: this.volume,
                 price: this.price,
                 type: this.type,
                 status: 1,

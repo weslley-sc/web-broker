@@ -276,7 +276,7 @@ export default {
 
         try {
           let response = await axios.get(
-            `http://localhost:8083/user/${this.claims.email}`,
+            `http://localhost:8083/api/users/username/${this.claims.email}`,
             {
               headers: { Authorization: "Bearer " + accessToken },
             }
@@ -290,29 +290,27 @@ export default {
         }
 
         try {
-          await axios.post(
-            `http://localhost:8083/order/compra`,
-            {
-              idUser: {
-                id: this.user,
+          await axios
+            .post(
+              `http://localhost:8083/api/new_order`,
+              {
+                idUser: this.user,
+                idStock: this.idStock,
+                stockSymbol: this.stockSymbol,
+                stockName: this.stockName,
+                volume: this.volume,
+                remainingVolume: this.volume,
+                price: this.price,
+                type: this.type,
+                status: 1,
               },
-              idStock: this.idStock,
-              stockSymbol: this.stockSymbol,
-              stockName: this.stockName,
-              volume: this.volume,
-              volumeRemaining: 0,
-              price: this.price,
-              type: this.type,
-              status: 1,
-            },
-            {
-              headers: { Authorization: "Bearer " + accessToken },
-            }
-          );
-          console.log("Aqui é id do stock: " + this.idStock);
-          console.log("Aqui é stockName : " + this.stockName);
-          console.log("Aqui é stockSymbol: " + this.stockSymbol);
-          console.log(this.stockName);
+              {
+                headers: { Authorization: "Bearer " + accessToken },
+              }
+            )
+            .then(() => {
+              window.alert("Cadastrado com sucesso");
+            });
         } catch (error) {
           console.log(error);
         }

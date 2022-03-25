@@ -63,6 +63,12 @@
               >
                 Logout
               </a>
+              <h1
+                class="py-5 px-2 text-indigo-200 hover:text-indigo-400 cursor-pointer"
+                v-if="authenticated"
+              >
+                saldo: R$ {{ user.dollarBalance }}, 00
+              </h1>
               <router-link
                 class="py-5 px-2 text-indigo-200 hover:text-indigo-400 cursor-pointer"
                 to="/login"
@@ -179,11 +185,12 @@
 </template>
 
 <script>
+import axios from "axios";
 import { ref } from "vue";
 export default {
   name: "#app",
   data: function () {
-    return { authenticated: false };
+    return { authenticated: false, user: [] };
   },
   setup() {
     const showMobileMenu = ref(false);
@@ -202,6 +209,22 @@ export default {
   methods: {
     async isAuthenticated() {
       this.authenticated = await this.$auth.isAuthenticated();
+      this.claims = await this.$auth.getUser();
+      let accessToken = this.$auth.getAccessToken();
+      try {
+        let response = await axios.get(
+          `http://localhost:8083/api/users/username/${this.claims.email}`,
+          {
+            headers: { Authorization: "Bearer " + accessToken },
+          }
+        );
+
+        this.user = response.data;
+        console.log("Aqui é id do usuario: " + this.user);
+        console.log(response);
+      } catch (error) {
+        this.erro = `${error}`;
+      }
     },
     async logout() {
       await this.$auth.signOut();
